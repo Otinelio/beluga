@@ -1,0 +1,147 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme {
+  --color-beluga-violet: #1B1033;
+  --color-beluga-gold: #D59B35;
+  --color-beluga-gold-soft: rgba(213, 155, 53, 0.5);
+  --color-beluga-champagne: #EFE6D6;
+  --color-beluga-charcoal: #232323;
+  --color-beluga-glow: #2C1F4A;
+
+  --color-background: #1B1033;
+  --color-foreground: #EFE6D6;
+  --color-card: #2C1F4A;
+  --color-card-foreground: #EFE6D6;
+  --color-popover: #1B1033;
+  --color-popover-foreground: #EFE6D6;
+  --color-primary: #D59B35;
+  --color-primary-foreground: #1B1033;
+  --color-secondary: #2C1F4A;
+  --color-secondary-foreground: #EFE6D6;
+  --color-muted: #232323;
+  --color-muted-foreground: rgba(239, 230, 214, 0.65);
+  --color-accent: #D59B35;
+  --color-accent-foreground: #1B1033;
+  --color-destructive: #d04545;
+  --color-destructive-foreground: #ffffff;
+  --color-border: rgba(213, 155, 53, 0.2);
+  --color-input: rgba(213, 155, 53, 0.25);
+  --color-ring: #D59B35;
+  --color-ring-offset-background: #1B1033;
+
+  --font-cormorant: "Cormorant Garamond", Georgia, serif;
+  --font-raleway: "Raleway", system-ui, sans-serif;
+  --font-dm: "DM Sans", system-ui, sans-serif;
+  --font-dancing: "Dancing Script", cursive;
+
+  --radius: 0.25rem;
+}
+
+:root {
+  --color-bg: #1B1033;
+  --color-gold: #D59B35;
+  --color-champagne: #EFE6D6;
+  --color-charcoal: #232323;
+  --color-glow: #2C1F4A;
+  color-scheme: dark;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html, body {
+    background-color: var(--color-bg);
+    color: var(--color-champagne);
+    font-family: var(--font-dm);
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-cormorant);
+    letter-spacing: -0.01em;
+  }
+  ::selection {
+    background: rgba(213, 155, 53, 0.35);
+    color: #1B1033;
+  }
+}
+
+/* Noise texture overlay (subtle SVG grain) */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.84 0 0 0 0 0.61 0 0 0 0 0.21 0 0 0 0.9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* Custom gold scrollbar */
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-track { background: #1B1033; }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #D59B35, #8a6320);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover { background: #D59B35; }
+
+/* Reusable beluga utilities */
+@layer utilities {
+  .beluga-glass {
+    background: rgba(27, 16, 51, 0.7);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(213, 155, 53, 0.18);
+  }
+  .beluga-glass-hover:hover {
+    border-color: rgba(213, 155, 53, 0.55);
+    box-shadow: 0 10px 40px -10px rgba(213, 155, 53, 0.25);
+  }
+  .beluga-gold-divider {
+    height: 1px;
+    width: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(213, 155, 53, 0.45) 50%,
+      transparent
+    );
+  }
+  .beluga-ambient {
+    background:
+      radial-gradient(circle at 50% 0%, rgba(213, 155, 53, 0.08), transparent 50%),
+      radial-gradient(ellipse at 80% 100%, #2C1F4A 0%, #1B1033 60%);
+  }
+  .beluga-mask-fade-r {
+    -webkit-mask-image: linear-gradient(to right, black 75%, transparent);
+            mask-image: linear-gradient(to right, black 75%, transparent);
+  }
+  .beluga-text-balance {
+    text-wrap: balance;
+  }
+  .beluga-eyebrow {
+    font-family: var(--font-raleway);
+    font-weight: 500;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    color: var(--color-beluga-gold);
+  }
+}
+
+/* Hide cursor glow on touch */
+@media (hover: none) {
+  .beluga-cursor-glow { display: none !important; }
+}
+
+/* Splash overlays app until React dismisses it */
+body.beluga-splash-active {
+  overflow: hidden;
+}
