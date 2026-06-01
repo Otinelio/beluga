@@ -71,6 +71,7 @@ export const router = createBrowserRouter([
   {
     element: <BareLayout />,
     children: [
+      { path: "/menu/scan/:tableNumber", element: <TablePage /> },
       { path: "/table/:tableNumber", element: <TablePage /> },
       { path: "/reception", element: <ReceptionPage /> },
       { path: "/admin", element: <AdminPage /> },

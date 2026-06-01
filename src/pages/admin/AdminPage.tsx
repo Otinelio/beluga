@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { Lock, LogOut, Trash2, Plus, Check, X, ListOrdered, CalendarDays, Image, Settings as SettingsIcon, Utensils } from "lucide-react";
+import { Lock, LogOut, Trash2, Plus, Check, X, ListOrdered, CalendarDays, Image, Settings as SettingsIcon, Utensils, QrCode, Printer } from "lucide-react";
+import { TableQrCard } from "@/components/admin/TableQrCard";
+import { getTableMenuScanUrl } from "@/utils/tableMenuUrl";
 import { useAdminStore } from "@/store/adminStore";
 import { useReservationStore } from "@/store/reservationStore";
 import { formatFCFA } from "@/utils/formatCurrency";
@@ -41,7 +43,7 @@ function PinGate({ onPass }: { onPass: () => void }) {
   );
 }
 
-type Tab = "menu" | "reservations" | "events" | "gallery" | "settings";
+type Tab = "menu" | "reservations" | "events" | "gallery" | "qr" | "settings";
 
 export function AdminPage() {
   const [authed, setAuthed] = useState(false);
@@ -73,6 +75,7 @@ export function AdminPage() {
             { id: "reservations" as Tab, label: "Réservations", Icon: ListOrdered },
             { id: "events" as Tab, label: "Événements", Icon: CalendarDays },
             { id: "gallery" as Tab, label: "Galerie", Icon: Image },
+            { id: "qr" as Tab, label: "QR Tables", Icon: QrCode },
             { id: "settings" as Tab, label: "Paramètres", Icon: SettingsIcon },
           ].map((t) => (
             <button
@@ -96,6 +99,7 @@ export function AdminPage() {
         {tab === "reservations" && <ReservationsTab />}
         {tab === "events" && <EventsTab />}
         {tab === "gallery" && <GalleryTab />}
+        {tab === "qr" && <QrTablesTab />}
         {tab === "settings" && <SettingsTab />}
       </main>
     </>
@@ -348,6 +352,102 @@ function GalleryTab() {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+function QrTablesTab() {
+  const tableNumbers = useAdminStore((s) => s.tableNumbers);
+  const addTableNumber = useAdminStore((s) => s.addTableNumber);
+  const removeTableNumber = useAdminStore((s) => s.removeTableNumber);
+  const [newTable, setNewTable] = useState("");
+
+  const printAll = () => {
+    const origin = window.location.origin;
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/><title>QR Tables — Le Beluga</title>
+      <style>
+        body { font-family: Georgia, serif; background: #fff; color: #1B1033; margin: 24px; }
+        h1 { text-align: center; font-size: 1.5rem; letter-spacing: 0.2em; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 32px; }
+        .card { border: 1px solid #D59B35; padding: 16px; text-align: center; page-break-inside: avoid; }
+        .card img { width: 180px; height: 180px; }
+        .num { font-size: 2rem; font-weight: bold; margin: 8px 0; }
+        .url { font-size: 9px; color: #666; word-break: break-all; }
+        @media print { .grid { grid-template-columns: repeat(2, 1fr); } }
+      </style></head><body>
+      <h1>LE BELUGA — QR MENU SCAN</h1>
+      <div class="grid">
+        ${tableNumbers
+          .map(
+            (n) =>
+              `<div class="card"><div class="num">Table ${n}</div><img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(getTableMenuScanUrl(n, origin))}" alt="QR ${n}"/><p class="url">${getTableMenuScanUrl(n, origin)}</p></div>`,
+          )
+          .join("")}
+      </div>
+      <script>window.onload = () => { window.print(); }</script>
+      </body></html>`;
+    const w = window.open("", "_blank");
+    if (!w) {
+      toast.error("Autorisez les pop-ups pour imprimer");
+      return;
+    }
+    w.document.write(html);
+    w.document.close();
+  };
+
+  return (
+    <div className="space-y-8">
+      <div className="beluga-glass p-6">
+        <p className="beluga-eyebrow">Menu scan</p>
+        <p className="mt-3 max-w-2xl font-raleway text-sm font-light leading-relaxed text-beluga-champagne/75">
+          Chaque code QR est lié à un numéro de table et ouvre directement la page de commande{" "}
+          <span className="text-beluga-gold">/menu/scan/[table]</span>. Placez le QR sur la table
+          correspondante pour que les clients commandent depuis leur téléphone.
+        </p>
+        <form
+          className="mt-6 flex flex-wrap gap-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const ok = addTableNumber(newTable);
+            if (ok) {
+              setNewTable("");
+              toast.success("Table ajoutée");
+            } else toast.error("Numéro invalide ou déjà utilisé");
+          }}
+        >
+          <input
+            className={`${inputCls} max-w-[140px]`}
+            placeholder="N° table (ex. 13)"
+            value={newTable}
+            onChange={(e) => setNewTable(e.target.value)}
+          />
+          <button
+            type="submit"
+            className="inline-flex items-center gap-2 bg-beluga-gold px-4 py-2 font-raleway text-[0.7rem] uppercase tracking-[0.22em] text-beluga-violet"
+          >
+            <Plus size={13} /> Ajouter une table
+          </button>
+          <button
+            type="button"
+            onClick={printAll}
+            className="inline-flex items-center gap-2 border border-beluga-gold/30 px-4 py-2 font-raleway text-[0.7rem] uppercase tracking-[0.22em] text-beluga-champagne hover:border-beluga-gold hover:text-beluga-gold"
+          >
+            <Printer size={13} /> Imprimer tous les QR
+          </button>
+        </form>
+      </div>
+
+      {tableNumbers.length === 0 ? (
+        <p className="beluga-glass p-10 text-center font-cormorant italic text-beluga-champagne/60">
+          Aucune table configurée. Ajoutez un numéro pour générer un QR.
+        </p>
+      ) : (
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {tableNumbers.map((n) => (
+            <TableQrCard key={n} tableNumber={n} onRemove={() => removeTableNumber(n)} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

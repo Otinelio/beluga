@@ -97,7 +97,7 @@ export function TablePage() {
             <ChevronLeft size={20} />
           </Link>
           <div className="text-center">
-            <p className="beluga-eyebrow">Le Beluga</p>
+            <p className="beluga-eyebrow">Menu scan</p>
             <p className="font-cormorant text-xl font-semibold text-beluga-champagne">
               Table {tableNumber}
             </p>
