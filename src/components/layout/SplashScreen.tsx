@@ -1,26 +1,40 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RESTAURANT } from "@/data/site";
 
 const MIN_DISPLAY_MS = 2200;
 const FADE_MS = 650;
+const SESSION_KEY = "beluga-splash-shown";
+
+/**
+ * Module-level flag ensures the splash is never replayed, even when
+ * React.StrictMode double-mounts the component in development.
+ */
+let splashAlreadyDismissed =
+  typeof sessionStorage !== "undefined" &&
+  sessionStorage.getItem(SESSION_KEY) === "1";
 
 export function SplashScreen() {
-  const [visible, setVisible] = useState(true);
+  // If already shown this session, skip entirely
+  const [visible, setVisible] = useState(() => !splashAlreadyDismissed);
   const [exiting, setExiting] = useState(false);
-  const dismissed = useRef(false);
 
   useEffect(() => {
+    if (!visible) return;
+
     document.body.classList.add("beluga-splash-active");
-    return () => document.body.classList.remove("beluga-splash-active");
-  }, []);
 
-  useEffect(() => {
     const started = Date.now();
 
     const dismiss = () => {
-      if (dismissed.current) return;
-      dismissed.current = true;
+      if (splashAlreadyDismissed) return;
+      splashAlreadyDismissed = true;
+
+      try {
+        sessionStorage.setItem(SESSION_KEY, "1");
+      } catch {
+        /* storage unavailable – no-op */
+      }
 
       const remaining = Math.max(0, MIN_DISPLAY_MS - (Date.now() - started));
       window.setTimeout(() => {
@@ -36,9 +50,14 @@ export function SplashScreen() {
     if (document.readyState === "complete") dismiss();
     else {
       window.addEventListener("load", dismiss, { once: true });
-      return () => window.removeEventListener("load", dismiss);
+      return () => {
+        window.removeEventListener("load", dismiss);
+        document.body.classList.remove("beluga-splash-active");
+      };
     }
-  }, []);
+  }, [visible]);
+
+  if (!visible && !exiting) return null;
 
   return (
     <AnimatePresence>
