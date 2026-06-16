@@ -14,8 +14,7 @@ import { useCartStore } from "@/store/cartStore";
 import { toast } from "sonner";
 import { RESTAURANT } from "@/data/site";
 
-const HERO_IMG =
-  "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=2400&q=85";
+const HERO_IMG = "/hero-beluga.png";
 
 function AnimatedTitle({ text }: { text: string }) {
   return (
